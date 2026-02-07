@@ -125,7 +125,7 @@ public class Model : IDisposable
                     case CellValueTag.None:
                         return new CellValue.None();
                     case CellValueTag.String:
-                        var value = new String((sbyte*)result.value->string_value);
+                        var value = new string((sbyte*)result.value->string_value);
                         return new CellValue.String()
                         {
                             Value = value,
