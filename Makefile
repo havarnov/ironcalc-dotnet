@@ -16,7 +16,7 @@ ifeq ($(OS),Darwin) # macOS
     NATIVE_LIB_EXT := .dylib
     ifeq ($(ARCH),x86_64)
         RID := osx-x64
-    else ifeq ($(ARCH),aarch64)
+    else ifeq ($(ARCH),arm64)
         RID := osx-arm64
     endif
 else ifeq ($(OS),Linux) # Linux
