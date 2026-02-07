@@ -102,6 +102,32 @@ public class Model : IDisposable
     }
 
     /// <summary>
+    /// Parses a reference like “Sheet1!B4” into {0, 2, 4}
+    /// </summary>
+    public CellRef? ParseReference(string str)
+    {
+        unsafe
+        {
+            var strBytes = Encoding.UTF8.GetBytes(str);
+            fixed (byte* strP = strBytes)
+            {
+                var option = NativeMethods.parse_reference(_ctx, strP);
+                if (option.is_some)
+                {
+                    return new CellRef()
+                    {
+                        Sheet = option.value->sheet,
+                        Column = option.value->column,
+                        Row = option.value->row,
+                    };
+                }
+
+                return null;
+            }
+        }
+    }
+
+    /// <summary>
     /// Gets the value of a cell by its sheet index, row, and column.
     /// </summary>
     /// <param name="sheet">The 0-based index of the sheet.</param>

@@ -27,6 +27,9 @@ namespace IronCalc.Native
         [DllImport(__DllName, EntryPoint = "evaluate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern void evaluate(ModelContext* context);
 
+        [DllImport(__DllName, EntryPoint = "parse_reference", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern ParseReferenceOption parse_reference(ModelContext* context, byte* str);
+
         [DllImport(__DllName, EntryPoint = "get_cell_value_by_index", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern GetValueResult get_cell_value_by_index(ModelContext* context, uint sheet, int row, int col);
 
@@ -64,6 +67,21 @@ namespace IronCalc.Native
         public ModelContext* model;
         public ModelContextError* error;
         [MarshalAs(UnmanagedType.U1)] public bool is_ok;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal unsafe partial struct CellReferenceIndex
+    {
+        public uint sheet;
+        public int column;
+        public int row;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal unsafe partial struct ParseReferenceOption
+    {
+        public CellReferenceIndex* value;
+        [MarshalAs(UnmanagedType.U1)] public bool is_some;
     }
 
     [StructLayout(LayoutKind.Sequential)]

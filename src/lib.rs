@@ -123,15 +123,16 @@ pub extern "C" fn new_empty(
         let timezone_str = std::ffi::CStr::from_ptr(timezone).to_string_lossy();
         let language_id_str = std::ffi::CStr::from_ptr(language_id).to_string_lossy();
 
-        let model = match Model::new_empty(&name_str, &locale_str, &timezone_str, &language_id_str) {
-                Ok(model) => model,
-                Err(error_msg) => {
-                    return CreateModelContextResult::create_error(
-                        error_msg,
-                        ModelContextErrorTag::WorkbookError,
-                    );
-                }
-            };
+        let model = match Model::new_empty(&name_str, &locale_str, &timezone_str, &language_id_str)
+        {
+            Ok(model) => model,
+            Err(error_msg) => {
+                return CreateModelContextResult::create_error(
+                    error_msg,
+                    ModelContextErrorTag::WorkbookError,
+                );
+            }
+        };
 
         let ctx = Box::new(InternalModelContext { model });
         let ctx = Box::into_raw(ctx) as *mut ModelContext;
@@ -149,6 +150,50 @@ pub unsafe extern "C" fn evaluate(context: *mut ModelContext) {
     let mut ctx = Box::from_raw(context as *mut InternalModelContext);
     ctx.model.evaluate();
     Box::into_raw(ctx) as *mut ModelContext;
+}
+
+#[repr(C)]
+pub struct CellReferenceIndex {
+    sheet: u32,
+    column: i32,
+    row: i32,
+}
+
+#[repr(C)]
+pub struct ParseReferenceOption {
+    value: *mut CellReferenceIndex,
+    is_some: bool,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn parse_reference(
+    context: *mut ModelContext,
+    str: *const c_char,
+) -> ParseReferenceOption {
+    let ctx = Box::from_raw(context as *mut InternalModelContext);
+    let str = std::ffi::CStr::from_ptr(str).to_string_lossy();
+
+    let cell_ref_index = ctx.model.parse_reference(&str);
+
+    Box::into_raw(ctx) as *mut ModelContext;
+
+    let (cell_ref_index, is_some) = if let Some(cell_ref_index) = cell_ref_index {
+        (
+            Box::into_raw(Box::new(CellReferenceIndex {
+                sheet: cell_ref_index.sheet,
+                column: cell_ref_index.column,
+                row: cell_ref_index.row,
+            })),
+            true,
+        )
+    } else {
+        (Default::default(), false)
+    };
+
+    ParseReferenceOption {
+        value: cell_ref_index,
+        is_some,
+    }
 }
 
 #[repr(C)]
